@@ -904,11 +904,11 @@ struct FirrtlWorker
 				continue;
 			}
 
-			if (cell->type.in(ID($dff), ID($sdff)))
+			if (cell->type.in(ID($dff), ID($sdff), ID($adff), ID($adffe), ID($aldff), ID($dffe), ID($sdffe), ID($sdffce)))
 			{
 				bool clkpol = cell->parameters.at(ID::CLK_POLARITY).as_bool();
 				if (clkpol == false)
-					log_error("Negative edge clock on FF %s.%s.\n", log_id(module), log_id(cell));
+					log_warning("Negative edge clock on FF %s.%s.\n", log_id(module), log_id(cell));
 
 				int width = cell->parameters.at(ID::WIDTH).as_int();
 				string expr = make_expr(cell->getPort(ID::D));
@@ -919,6 +919,16 @@ struct FirrtlWorker
 				cell_exprs.push_back(stringf("%s%s <= %s %s\n", indent.c_str(), y_id.c_str(), expr.c_str(), cellFileinfo.c_str()));
 				register_reverse_wire_map(y_id, cell->getPort(ID::Q));
 
+				continue;
+			}
+
+			if (cell->type.in(ID($dlatch))) {
+				int width = cell->parameters.at(ID::WIDTH).as_int();
+				string expr = make_expr(cell->getPort(ID::D));
+				wire_decls.push_back(stringf("%swire %s: UInt<%d> %s\n", indent.c_str(), y_id.c_str(), width, cellFileinfo.c_str()));
+
+				cell_exprs.push_back(stringf("%s%s <= %s %s\n", indent.c_str(), y_id.c_str(), expr.c_str(), cellFileinfo.c_str()));
+				register_reverse_wire_map(y_id, cell->getPort(ID::Q));
 				continue;
 			}
 
