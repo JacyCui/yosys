@@ -45,7 +45,10 @@ static const int FIRRTL_MAX_DSH_WIDTH_ERROR = 20; // For historic reasons, this 
 std::string getFileinfo(const RTLIL::AttrObject *design_entity)
 {
 	std::string src(design_entity->get_src_attribute());
-	std::string fileinfo_str = src.empty() ? "" : "@[" + src + "]";
+	static std::regex pattern(R"((\d)[\.\-](\d))");
+	std::string fileinfo_str = src.empty() ? "" : "@[" +
+		// convert to legal firrtl file info format
+		std::regex_replace(src, pattern, "$1:$2") + "]";
 	return fileinfo_str;
 }
 
@@ -901,7 +904,7 @@ struct FirrtlWorker
 				continue;
 			}
 
-			if (cell->type.in(ID($dff)))
+			if (cell->type.in(ID($dff), ID($sdff)))
 			{
 				bool clkpol = cell->parameters.at(ID::CLK_POLARITY).as_bool();
 				if (clkpol == false)
@@ -991,10 +994,10 @@ struct FirrtlWorker
 
 			Const init_data = mem.get_init_data();
 			if (!init_data.is_fully_undef())
-				log_error("Memory with initialization data: %s.%s\n", log_id(module), log_id(mem.memid));
+				log_warning("Memory with initialization data: %s.%s\n", log_id(module), log_id(mem.memid));
 
 			if (mem.start_offset != 0)
-				log_error("Memory with nonzero offset: %s.%s\n", log_id(module), log_id(mem.memid));
+				log_warning("Memory with nonzero offset: %s.%s\n", log_id(module), log_id(mem.memid));
 
 			for (int i = 0; i < GetSize(mem.rd_ports); i++)
 			{
