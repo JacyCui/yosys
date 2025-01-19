@@ -1041,7 +1041,7 @@ struct FirrtlWorker
 					log_error("Negedge write port %d on memory %s.%s.\n", i, log_id(module), log_id(mem.memid));
 				for (int i = 1; i < GetSize(port.en); i++)
 					if (port.en[0] != port.en[i])
-						log_error("Complex write enable on port %d on memory %s.%s.\n", i, log_id(module), log_id(mem.memid));
+						log_warning("Complex write enable on port %d on memory %s.%s.\n", i, log_id(module), log_id(mem.memid));
 
 				std::ostringstream wpe;
 
